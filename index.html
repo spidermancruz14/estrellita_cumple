@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🕷️✨ ¡Feliz Cumpleaños Estrellita! ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #1a0b1a 0%, #0f0f1a 50%, #2a0a0a 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* Fondo de estrellas para "Estrellita" */
+        body::before {
+            content: "";
+            position: fixed; top: 0; left: 0; width: 50%; height: 50%;
+            background-image: 
+                radial-gradient(2px 2px at 1px 0px, #fff, transparent),
+                radial-gradient(2px 2px at 40px 70px, #ffd700, transparent),
+                radial-gradient(1px 1px at 0px 0px, #fff, transparent);
+            background-size: 200px 200px;
+            animation: twinkle 5s infinite linear;
+            pointer-events: none; z-index: 0; opacity: 0.6;
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+
+        /* ===== PANTALLA DE PASSCODE ===== */
+        .passcode-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #8B0000, #cc2222, #5a0000);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 1000; transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .passcode-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.1); }
+
+        .passcode-photo {
+            width: 450px; height: 650px; background: #fff; padding: 15px 15px 40px;
+            border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            margin-bottom: 30px; transform: rotate(-2deg); animation: photoFloat 3s ease-in-out infinite;
+        }
+        @keyframes photoFloat {
+            0%, 100% { transform: rotate(-2deg) translateY(0); }
+            50% { transform: rotate(-2deg) translateY(-10px); }
+        }
+        .passcode-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+        .passcode-photo::after {
+            content: "Happy Birthday!\nEstrellita 💖";
+            font-family: 'Playfair Display', cursive; font-size: 1.4rem; color: #cc2222;
+            text-align: center; display: block; margin-top: 10px; white-space: pre-line;
+        }
+
+        .passcode-title { font-family: 'Playfair Display', cursive; font-size: 1.5rem; color: #ffd700; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .passcode-dots { display: flex; gap: 15px; margin-bottom: 30px; }
+        .dot { width: 20px; height: 20px; border: 3px solid #ffd700; border-radius: 50%; transition: all 0.3s ease; }
+        .dot.filled { background: #ffd700; transform: scale(1.2); box-shadow: 0 0 20px rgba(255,215,0,0.8); }
+
+        .keypad { display: grid; grid-template-columns: repeat(3, 80px); gap: 15px; }
+        .key {
+            width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,215,0,0.5);
+            background: rgba(255,255,255,0.1); color: #fff; font-size: 1.8rem; font-weight: bold;
+            cursor: pointer; transition: all 0.2s ease; backdrop-filter: blur(10px);
+        }
+        .key:hover { background: rgba(255,215,0,0.3); transform: scale(1.1); box-shadow: 0 0 30px rgba(255,215,0,0.6); }
+        .key:active { transform: scale(0.95); }
+
+        /* ===== PANTALLA DE CARGA ===== */
+        .loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff5e6; display: none; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 999;
+        }
+        .loading-screen.active { display: flex; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .loading-cake { font-size: 5rem; animation: cakeBounce 1s ease-in-out infinite; }
+        @keyframes cakeBounce { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
+        .loading-text { margin-top: 20px; font-size: 1.3rem; color: #cc2222; font-weight: 600; }
+        .loading-bar { width: 200px; height: 8px; background: rgba(0,0,0,0.1); border-radius: 10px; margin-top: 15px; overflow: hidden; }
+        .loading-progress { height: 100%; background: linear-gradient(90deg, #ff6b6b, #ffd93d); border-radius: 10px; width: 0%; transition: width 0.3s ease; }
+
+        /* ===== CONTENIDO PRINCIPAL ===== */
+        .main-content { display: none; min-height: 100vh; position: relative; }
+        .main-content.active { display: block; animation: fadeIn 1s ease; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+        /* ===== SOBRE ===== */
+        .envelope-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; cursor: pointer; transition: opacity 0.5s ease;
+        }
+        .envelope-wrapper.hidden { opacity: 0; pointer-events: none; }
+        .envelope {
+            width: 350px; height: 250px; background: linear-gradient(145deg, #8B0000, #cc2222);
+            border-radius: 15px; position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 4px rgba(255,215,0,0.4);
+            animation: envelopeFloat 3s ease-in-out infinite;
+        }
+        @keyframes envelopeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .envelope::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 125px;
+            background: linear-gradient(135deg, transparent 49%, rgba(255,215,0,0.4) 50%, transparent 51%);
+            clip-path: polygon(50% 100%, 0 0, 100% 0); border-radius: 15px 15px 0 0; z-index: 2;
+        }
+        .envelope-seal {
+            position: absolute; top: 105px; left: 50%; transform: translateX(-50%);
+            width: 70px; height: 70px; background: linear-gradient(135deg, #ffd700, #ffb347);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: #8B0000;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.4), 0 0 30px rgba(255,215,0,0.8);
+            z-index: 3; animation: sealPulse 2s infinite; border: 4px solid #fff;
+        }
+        @keyframes sealPulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.15); } }
+        .envelope-text {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            text-align: center; font-family: 'Playfair Display', cursive;
+            font-size: 1.3rem; color: #ffd700; text-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 2;
+        }
+        .click-hint { margin-top: 40px; color: #ffdfaa; font-size: 1.1rem; animation: hintBounce 2s infinite; }
+        @keyframes hintBounce { 0%, 100% { opacity: 0.7; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-8px); } }
+
+        /* ===== TARJETA ===== */
+        .card-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px; z-index: 50; opacity: 0; transition: opacity 0.8s ease;
+        }
+        .card-container.active { display: flex; opacity: 1; }
+        .birthday-card {
+            max-width: 700px; width: 95%;
+            background: linear-gradient(145deg, rgba(30,25,50,0.95), rgba(20,15,35,0.98));
+            backdrop-filter: blur(20px); border-radius: 50px; padding: 40px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 0 3px rgba(255,215,0,0.5);
+            border: 3px solid rgba(255,220,120,0.8);
+            animation: cardAppear 0.8s ease, floatCard 5s ease-in-out infinite;
+            position: relative; max-height: 90vh; overflow-y: auto;
+        }
+        @keyframes cardAppear { from { transform: scale(0.8) rotateY(180deg); opacity: 0; } to { transform: scale(1) rotateY(0); opacity: 1; } }
+        @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .close-btn {
+            position: absolute; top: 20px; right: 20px; width: 45px; height: 45px;
+            border-radius: 50%; background: rgba(255,77,77,0.9); border: none; color: #fff;
+            font-size: 1.5rem; cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        .close-btn:hover { background: #ff4d4d; transform: rotate(90deg) scale(1.1); }
+
+        .card-header { text-align: center; margin-bottom: 30px; }
+        .card-header h1 {
+            font-family: 'Playfair Display', cursive; font-size: 2.8rem;
+            background: linear-gradient(135deg, #FFD966, #FFB347, #FF4D4D, #e94560);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            margin-bottom: 10px; animation: titleGlow 3s ease-in-out infinite;
+        }
+        @keyframes titleGlow { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.4); } }
+        .spider-deco { font-size: 3rem; margin: 10px 0; animation: spiderDrop 2s ease-in-out infinite; }
+        @keyframes spiderDrop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+
+        .photo-section { text-align: center; margin: 30px 0; }
+        .photo-frame {
+            display: inline-block; padding: 10px; background: #fff; border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); transform: rotate(2deg); transition: transform 0.3s ease;
+        }
+        .photo-frame:hover { transform: rotate(0deg) scale(1.05); }
+        .photo-frame img { width: 180px; height: 280px; object-fit: cover; border-radius: 50%; border: 5px solid #ffd700; }
+        .photo-caption { margin-top: 10px; font-size: 1.1rem; color: #ffdfaa; font-style: italic; }
+
+        .message-box {
+            background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(30,20,40,0.8));
+            border-radius: 30px; padding: 30px; margin: 25px 0;
+            border: 2px solid rgba(255,215,0,0.4); font-size: 1.1rem; line-height: 1.8; text-align: center;
+        }
+        .message-box p { margin-bottom: 15px; }
+
+        /* ===== PASTEL SVG ANIMADO ===== */
+        .pastel-box {
+            background: linear-gradient(135deg, rgba(60,20,40,.85), rgba(30,15,45,.95));
+            border: 2px solid #ff9fb8; border-radius: 35px; padding: 22px 16px 18px;
+            margin: 22px 0; text-align: center; box-shadow: 0 8px 30px rgba(255,100,150,.25);
+        }
+        .pastel-box h3 { font-family: 'Playfair Display', serif; color: #ffd966; font-size: 1.4rem; margin-bottom: 4px; }
+        .pastel-box small { color: #ffdfaa; display: block; margin-bottom: 6px; }
+        #pastelSvg { width: 240px; max-width: 80%; height: auto; cursor: pointer; overflow: visible; }
+        .llama { transform-box: fill-box; transform-origin: 50% 100%; animation: flameAnim .35s ease-in-out infinite alternate; }
+        .llama:nth-of-type(2n) { animation-delay: .12s; }
+        @keyframes flameAnim { from { transform: scale(1,1) rotate(-4deg); } to { transform: scale(.88,1.15) rotate(4deg); } }
+        .apagada .llama { display: none; }
+        .humo { opacity: 0; stroke: #ccc; fill: none; stroke-width: 2; stroke-linecap: round; }
+        .apagada .humo { animation: humoAnim 1.8s ease-out forwards; }
+        @keyframes humoAnim { 0% { opacity: .8; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-25px); } }
+        #deseo { min-height: 1.6em; margin-top: 6px; color: #fff; font-weight: 600; }
+        .confeti { position: fixed; top: -12px; width: 10px; height: 14px; z-index: 999; pointer-events: none; animation: cae linear forwards; }
+        @keyframes cae { to { transform: translateY(110vh) rotate(720deg); opacity: .8; } }
+        
+        /* ===== CARTA SPIDER-MAN ===== */
+        .escena-carta { perspective: 900px; display: flex; justify-content: center; margin: 26px 0; }
+        .carta-spider {
+            width: 250px; height: 370px; position: relative; transform-style: preserve-3d;
+            transition: transform .8s cubic-bezier(.2,.8,.2,1); cursor: pointer;
+        }
+        .carta-spider.volteada { transform: rotateY(180deg); }
+        .cara {
+            position: absolute; inset: 0; border-radius: 20px; backface-visibility: hidden;
+            overflow: hidden; border: 4px solid #ffd700; box-shadow: 0 15px 40px rgba(0,0,0,.6), 0 0 30px rgba(220,20,60,.5);
+        }
+        .frente {
+            background: radial-gradient(circle at 50% 38%, #e23636 0%, #a01020 55%, #2a0510 100%);
+            display: flex; flex-direction: column; align-items: center; padding: 12px;
+        }
+        .frente::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.35) 48%, transparent 62%);
+            background-size: 250% 100%; animation: brillo 3.5s infinite; pointer-events: none;
+        }
+        @keyframes brillo { 0% { background-position: 150% 0; } 100% { background-position: -100% 0; } }
+        .carta-titulo { font-family: 'Playfair Display', serif; font-weight: 900; color: #fff; font-size: 1.05rem; text-shadow: 0 2px 6px #000; width: 100%; display: flex; justify-content: space-between; }
+        .carta-titulo span { color: #ffd700; }
+        .carta-arte { width: 100%; flex: 1; margin: 8px 0; border: 3px solid #ffd700; border-radius: 12px; background: #12121f; overflow: hidden; }
+        .carta-arte svg { width: 100%; height: 100%; display: block; }
+        .carta-hab { width: 100%; background: rgba(0,0,0,.55); border-radius: 10px; padding: 8px 10px; font-size: .72rem; line-height: 1.35; color: #fff; text-align: left; }
+        .carta-hab b { color: #ffd700; }
+        .dorso { transform: rotateY(180deg); background: #12121f; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; gap: 10px; }
+        .dorso p { font-size: .9rem; line-height: 1.5; color: #ffdfaa; }
+        .dorso h4 { font-family: 'Playfair Display', serif; color: #ff4d4d; font-size: 1.3rem; }
+        .carta-nota { text-align: center; font-size: .85rem; color: #ffdfaa; margin-top: -10px; }
+        @media(prefers-reduced-motion: reduce) { .llama, .frente::after { animation: none; } }
+
+        /* ===== COUNTDOWN & FUEGOS ARTIFICIALES ===== */
+        .countdown-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 200;
+        }
+        .countdown-overlay.active { display: flex; animation: fadeIn 0.5s ease; }
+        .countdown-number {
+            font-size: 15rem; font-weight: bold; color: #ffd700;
+            text-shadow: 0 0 40px rgba(255,215,0,0.8); animation: countdownPulse 1s ease;
+        }
+        @keyframes countdownPulse { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+        .wish-text { font-size: 2rem; color: #fff; margin-top: 20px; font-family: 'Playfair Display', cursive; }
+        
+        .fireworks { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 150; }
+        .firework { position: absolute; width: 4px; height: 4px; border-radius: 50%; animation: explode 1.5s ease-out forwards; }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .signature { text-align: center; margin-top: 40px; font-family: 'Playfair Display', cursive; font-size: 2rem; color: #ffd700; }
+        .date { text-align: center; margin-top: 10px; color: #ffdfaa; font-size: 1.1rem; }
+
+        @media (max-width: 600px) {
+            .keypad { grid-template-columns: repeat(3, 65px); gap: 10px; }
+            .key { width: 65px; height: 65px; font-size: 1.5rem; }
+            .card-header h1 { font-size: 2rem; }
+            .countdown-number { font-size: 10rem; }
+            .birthday-card { padding: 25px; border-radius: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE PASSCODE -->
+    <div class="passcode-screen" id="passcodeScreen">
+        <div class="passcode-photo">
+            <!-- onerror garantiza que se vea bonito aunque no encuentre la imagen -->
+            <img src="Estrellita_amiga_5.jpeg" onerror="this.src='https://placehold.co/250x300/8B0000/ffd700?text=Estrellita+🕷️✨'; this.onerror=null;" alt="Estrellita" width="500" height="500">
+        </div>
+        <div class="passcode-title">Enter a Passcode</div>
+        <div class="passcode-dots" id="passcodeDots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="keypad">
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+            <button class="key" style="visibility:hidden"></button>
+            <button class="key" data-key="0">0</button>
+            <button class="key" data-key="clear">✖</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE CARGA -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-cake">🎂</div>
+        <div class="loading-text">Loading your birthday surprise...</div>
+        <div class="loading-bar"><div class="loading-progress" id="loadingProgress"></div></div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content" id="mainContent">
+        <div id="canvas-container"></div>
+
+        <!-- SOBRE -->
+        <div class="envelope-wrapper" id="envelopeWrapper">
+            <div class="envelope">
+                <div class="envelope-seal">🕷️</div>
+                <div class="envelope-text">Para: Estrellita <br><small>¡Toca para abrir!</small></div>
+            </div>
+            <div class="click-hint"><i class="fas fa-hand-pointer"></i> Toca o haz clic para abrir tu sorpresa 🎉</div>
+        </div>
+
+        <!-- TARJETA -->
+        <div class="card-container" id="cardContainer">
+            <div class="birthday-card">
+                <button class="close-btn" id="closeBtn">✖</button>
+                
+                <div class="card-header">
+                    <h1>¡Feliz Cumpleaños Estrellita! 🎉</h1>
+                    <div class="spider-deco">🕷️✨🕸️</div>
+                    <p style="color: #ffdfaa; font-size: 1.2rem;">22 de Octubre - Tu día especial</p>
+                </div>
+
+                <div class="photo-section">
+                    <div class="photo-frame">
+                        <img src="Estrellita_Amiga_2.jpeg" onerror="this.src='https://placehold.co/180x180/dc143c/ffd700?text=Estrellita+🌻'; this.onerror=null;" alt="Foto de Estrellita">
+                    </div>
+                    <div class="photo-caption">
+                        <i class="fas fa-heart" style="color:#ff4d6d;"></i> Tu amistad brilla como tu nombre ✨<br>
+                        Tu valentía inspira como Spider-Man 🕷️
+                    </div>
+                </div>
+
+                <div class="message-box">
+                    <p>🌸 <strong>Amiga mía</strong>, en tu cumpleaños quiero recordarte lo increíble que eres. Has estado en mis momentos más difíciles, has compartido mis risas y has sido la hermana que elegí.</p>
+                    <p>🕷️ Como Spider-Man dice: <strong>"con gran poder viene gran responsabilidad"</strong>... y tú transformas vidas con amor, paciencia y corazón. ✨</p>
+                    <p>💛 Desde que entraste a mi vida todo cambió para bien. Gracias por ser mi amiga, te quiero infinito. ¡Te adoro!</p>
+                </div>
+
+                <!-- PASTEL SVG -->
+                <div class="pastel-box" id="pastelBox">
+                    <h3>🎂 Tu pastel, Estrellita 🎂</h3>
+                    <small>Toca el pastel para soplar las velas y pedir un deseo</small>
+                    <svg id="pastelSvg" viewBox="0 0 240 250" aria-label="Pastel de cumpleaños con velas">
+                        <defs>
+                            <linearGradient id="gBiz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb3c6"/><stop offset="1" stop-color="#ff7a9c"/></linearGradient>
+                            <linearGradient id="gPlato" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd700"/><stop offset="1" stop-color="#c8960c"/></linearGradient>
+                        </defs>
+                        <ellipse cx="120" cy="228" rx="112" ry="14" fill="url(#gPlato)"/>
+                        <rect x="22" y="160" width="196" height="64" rx="10" fill="#e94560"/>
+                        <path d="M22 168 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 q12 16 24 0 v-14 h-196z" fill="#fff4e0"/>
+                        <rect x="52" y="108" width="136" height="56" rx="10" fill="url(#gBiz)"/>
+                        <path d="M52 116 q11 15 22 0 q11 15 22 0 q11 15 22 0 q11 15 22 0 q11 15 22 0 q11 15 22 0 v-14 h-132z" fill="#fff4e0"/>
+                        <g id="gir1" transform="translate(60 192)"><g fill="#ffc107"><ellipse rx="4" ry="9" cy="-9"/><ellipse rx="4" ry="9" cy="9"/><ellipse rx="9" ry="4" cx="-9"/><ellipse rx="9" ry="4" cx="9"/><ellipse rx="4" ry="9" cy="-8" transform="rotate(45)"/><ellipse rx="4" ry="9" cy="8" transform="rotate(45)"/><ellipse rx="9" ry="4" cx="-8" transform="rotate(45)"/><ellipse rx="9" ry="4" cx="8" transform="rotate(45)"/></g><circle r="6" fill="#6b3f1d"/></g>
+                        <use href="#gir1" x="120"/>
+                        <g transform="translate(120 192)"><circle r="9" fill="#12121f"/><g stroke="#12121f" stroke-width="2" fill="none"><path d="M-8 -3 l-8 -6M-8 2 l-9 2M-6 6 l-7 8M8 -3 l8 -6M8 2 l9 2M6 6 l7 8"/></g><path d="M0 -9 L0 -2" stroke="#e23636" stroke-width="3"/></g>
+                        <text x="120" y="140" text-anchor="middle" font-family="Playfair Display,serif" font-weight="900" font-size="15" fill="#8B0000">¡Feliz Cumple!</text>
+                        <g id="velas">
+                            <g><rect x="78" y="78" width="8" height="32" rx="2" fill="#fff"/><rect x="78" y="86" width="8" height="5" fill="#e23636"/><rect x="78" y="97" width="8" height="5" fill="#e23636"/><path class="llama" d="M82 52 q-9 14 0 24 q9 -10 0 -24z" fill="#ffb300"/><path class="llama" d="M82 62 q-4 7 0 12 q4 -5 0 -12z" fill="#fff6a8"/></g>
+                            <g><rect x="116" y="70" width="8" height="40" rx="2" fill="#fff"/><rect x="116" y="80" width="8" height="5" fill="#ffd700"/><rect x="116" y="93" width="8" height="5" fill="#ffd700"/><path class="llama" d="M120 44 q-9 14 0 24 q9 -10 0 -24z" fill="#ffb300"/><path class="llama" d="M120 54 q-4 7 0 12 q4 -5 0 -12z" fill="#fff6a8"/></g>
+                            <g><rect x="154" y="78" width="8" height="32" rx="2" fill="#fff"/><rect x="154" y="86" width="8" height="5" fill="#e23636"/><rect x="154" y="97" width="8" height="5" fill="#e23636"/><path class="llama" d="M158 52 q-9 14 0 24 q9 -10 0 -24z" fill="#ffb300"/><path class="llama" d="M158 62 q-4 7 0 12 q4 -5 0 -12z" fill="#fff6a8"/></g>
+                        </g>
+                        <path class="humo" d="M82 60 q-6 -8 0 -14 t0 -14"/><path class="humo" d="M120 52 q-6 -8 0 -14 t0 -14"/><path class="humo" d="M158 60 q-6 -8 0 -14 t0 -14"/>
+                    </svg>
+                    <div id="deseo"></div>
+                </div>
+
+                <img src="Estrellita_Amiga_1.jpeg" alt="Foto de Estrellita" width="100%" height="200%">
+                
+                <!-- CARTA SPIDER-MAN -->
+                <div class="escena-carta">
+                    <div class="carta-spider" id="cartaSpider" tabindex="0" role="button" aria-label="Carta Spider-Man, toca para voltear">
+                        <div class="cara frente">
+                            <div class="carta-titulo">Estrellita <span>♥ 22</span></div>
+                            <div class="carta-arte">
+                                <svg viewBox="0 0 200 200" aria-hidden="true">
+                                    <rect width="200" height="200" fill="#12121f"/>
+                                    <g stroke="#ff6b6b" stroke-width="1" fill="none" opacity=".55">
+                                        <path d="M100 100 L0 0M100 100 L100 0M100 100 L200 0M100 100 L0 100M100 100 L200 100M100 100 L0 200M100 100 L100 200M100 100 L200 200"/>
+                                        <circle cx="100" cy="100" r="25"/><circle cx="100" cy="100" r="50"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="100"/>
+                                    </g>
+                                    <ellipse cx="100" cy="100" rx="52" ry="62" fill="#dc143c" stroke="#7a0c20" stroke-width="3"/>
+                                    <g stroke="#5a0816" stroke-width="1.5" fill="none" opacity=".7"><path d="M100 38 V162M70 45 Q100 90 70 155M130 45 Q100 90 130 155M52 90 Q100 105 148 90M56 120 Q100 135 144 120"/></g>
+                                    <path d="M55 82 Q72 62 92 92 Q80 112 58 100 Z" fill="#fff" stroke="#000" stroke-width="3"/>
+                                    <path d="M145 82 Q128 62 108 92 Q120 112 142 100 Z" fill="#fff" stroke="#000" stroke-width="3"/>
+                                    <g transform="translate(150 52)"><g fill="#ffc107"><ellipse rx="5" ry="12" cy="-11"/><ellipse rx="5" ry="12" cy="11"/><ellipse rx="12" ry="5" cx="-11"/><ellipse rx="12" ry="5" cx="11"/><ellipse rx="5" ry="12" cy="-10" transform="rotate(45)"/><ellipse rx="5" ry="12" cy="10" transform="rotate(45)"/><ellipse rx="12" ry="5" cx="-10" transform="rotate(45)"/><ellipse rx="12" ry="5" cx="10" transform="rotate(45)"/></g><circle r="8" fill="#6b3f1d"/></g>
+                                    <text x="100" y="188" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#ffd700">SPIDER-ESTRELLA</text>
+                                </svg>
+                            </div>
+                            <div class="carta-hab"><b>Poder:</b> Sonrisa que ilumina el día ☀️<br><b>Habilidad:</b> Ser la mejor amiga en todos los universos 🕷️<br><b>Debilidad:</b> Ninguna, ¡es indestructible! 💖</div>
+                        </div>
+                        <div class="cara dorso">
+                            <h4>Carta especial 🕷️✨</h4>
+                            <p>"Con gran poder viene gran responsabilidad"… y tú usas el tuyo para hacer feliz a los demás.</p>
+                            <p>Eres mi heroína favorita.<br>¡Feliz cumpleaños, Estrellita! 🎉</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="carta-nota">👆 Toca la carta para voltearla</p>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <div class="photo-frame">
+                        <img src="Estrellita_Amiga_4.jpeg" onerror="this.src='https://placehold.co/180x180/cc2222/ffd700?text=Amigas+💖'; this.onerror=null;" alt="Foto de Estrellita">
+                    </div>
+                </div>
+
+                <div class="signature">
+                    TE QUIERO MUCHO EN TODOS LOS UNIVERSOS 💖
+                </div>
+                <div class="date">
+                    <img src="Estrellita_Amiga_3.jpeg" alt="Foto de Estrellita" width="100%" height="130%">
+                    🎂 22 de Octubre 🕷️🌻
+                </div>
+            </div>
+        </div>
+
+        <!-- COUNTDOWN OVERLAY -->
+        <div class="countdown-overlay" id="countdownOverlay">
+            <div class="countdown-number" id="countdownNumber">3</div>
+            <div class="wish-text">✨ Make a Wish ✨</div>
+        </div>
+
+        <!-- FIREWORKS CONTAINER -->
+        <div class="fireworks" id="fireworks"></div>
+    </div>
+
+    <script>
+        /* Pastel: soplar velas + confeti */
+        const pastelSvg = document.getElementById('pastelSvg');
+        const deseo = document.getElementById('deseo');
+        const pastelBox = document.getElementById('pastelBox');
+        
+        function lanzarConfeti() {
+            const colores = ['#ffd700', '#e94560', '#ff9fb8', '#ffffff', '#ffb347', '#dc143c'];
+            for (let i = 0; i < 70; i++) {
+                const c = document.createElement('div');
+                c.className = 'confeti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.background = colores[i % colores.length];
+                c.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+                c.style.animationDuration = (2 + Math.random() * 2.5) + 's';
+                c.style.animationDelay = Math.random() * .6 + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 5500);
+            }
+        }
+        
+        pastelSvg?.addEventListener('click', () => {
+            if (pastelBox.classList.contains('apagada')) {
+                pastelBox.classList.remove('apagada');
+                deseo.textContent = '';
+                return;
+            }
+            pastelBox.classList.add('apagada');
+            deseo.textContent = '✨ ¡Pide un deseo, Estrellita! Que se cumpla todo 🌻';
+            lanzarConfeti();
+        });
+        
+        /* Carta Spider-Man: voltear */
+        const carta = document.getElementById('cartaSpider');
+        const voltear = () => carta.classList.toggle('volteada');
+        carta?.addEventListener('click', voltear);
+        carta?.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); voltear(); } });
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ===== PASSCODE SYSTEM =====
+        let passcode = '';
+        const correctPasscode = '1022'; // 22 de Octubre para Estrellita
+        const maxDigits = 4;
+
+        const passcodeScreen = document.getElementById('passcodeScreen');
+        const passcodeDots = document.getElementById('passcodeDots');
+        const dots = passcodeDots.querySelectorAll('.dot');
+        const keys = document.querySelectorAll('.key[data-key]');
+
+        keys.forEach(key => {
+            key.addEventListener('click', () => {
+                const value = key.dataset.key;
+                if (value === 'clear') {
+                    passcode = '';
+                    updateDots();
+                } else if (passcode.length < maxDigits) {
+                    passcode += value;
+                    updateDots();
+                    if (passcode.length === maxDigits) {
+                        setTimeout(checkPasscode, 300);
+                    }
+                }
+            });
+        });
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                if (index < passcode.length) { dot.classList.add('filled'); } 
+                else { dot.classList.remove('filled'); }
+            });
+        }
+
+        function checkPasscode() {
+            if (passcode === correctPasscode) {
+                passcodeScreen.classList.add('hidden');
+                setTimeout(() => { showLoading(); }, 800);
+            } else {
+                passcodeScreen.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    passcode = '';
+                    updateDots();
+                    passcodeScreen.style.animation = '';
+                }, 500);
+            }
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }`;
+        document.head.appendChild(style);
+
+        // ===== LOADING SCREEN =====
+        function showLoading() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const progressBar = document.getElementById('loadingProgress');
+            loadingScreen.classList.add('active');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                progressBar.style.width = progress + '%';
+                if (progress === 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingScreen.classList.remove('active');
+                        showMainContent();
+                    }, 500);
+                }
+            }, 200);
+        }
+
+        // ===== MAIN CONTENT =====
+        function showMainContent() {
+            const mainContent = document.getElementById('mainContent');
+            mainContent.classList.add('active');
+            initThreeJS();
+        }
+
+        // ===== ENVELOPE & CARD =====
+        const envelopeWrapper = document.getElementById('envelopeWrapper');
+        const cardContainer = document.getElementById('cardContainer');
+        const closeBtn = document.getElementById('closeBtn');
+
+        envelopeWrapper.addEventListener('click', openCard);
+        closeBtn.addEventListener('click', closeCard);
+
+        function openCard() {
+            envelopeWrapper.classList.add('hidden');
+            setTimeout(() => {
+                cardContainer.classList.add('active');
+                startSpiderAnimation();
+            }, 500);
+        }
+
+        function closeCard() {
+            cardContainer.classList.remove('active');
+            setTimeout(() => { envelopeWrapper.classList.remove('hidden'); }, 500);
+        }
+
+        // ===== FIREWORKS =====
+        function celebrateBirthday() {
+            const fireworksContainer = document.getElementById('fireworks');
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ffd700'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => { createFirework(fireworksContainer, colors); }, i * 80);
+            }
+            setTimeout(() => {
+                alert('🎂✨ ¡Feliz Cumpleaños Estrellita! ✨🎂\n\nQue todos tus deseos se hagan realidad. Te quiero en todos los universos 🕷️🌻💖');
+            }, 2500);
+        }
+
+        function createFirework(container, colors) {
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            const startX = Math.random() * window.innerWidth;
+            const startY = window.innerHeight;
+            firework.style.left = startX + 'px';
+            firework.style.top = startY + 'px';
+            firework.style.background = colors[Math.floor(Math.random() * colors.length)];
+            const angle = (Math.random() - 0.5) * Math.PI * 2;
+            const velocity = 200 + Math.random() * 300;
+            firework.style.setProperty('--tx', Math.cos(angle) * velocity + 'px');
+            firework.style.setProperty('--ty', (Math.sin(angle) * velocity - 200) + 'px');
+            container.appendChild(firework);
+            setTimeout(() => { firework.remove(); }, 1500);
+        }
+
+        // ===== THREE.JS SCENE =====
+        let scene, camera, renderer;
+        let spiderGroup, webLines = [];
+        let isAnimating = false;
+
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0f0f1a, 0.02);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            const pointLight = new THREE.PointLight(0xffd700, 1, 100);
+            pointLight.position.set(2, 3, 4);
+            scene.add(pointLight);
+            
+            createSpiderMan();
+            createWebs();
+            animate();
+            
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        function createSpiderMan() {
+            spiderGroup = new THREE.Group();
+            const bodyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xdc143c });
+            spiderGroup.add(new THREE.Mesh(bodyGeometry, bodyMaterial));
+            
+            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.y = 0.7;
+            spiderGroup.add(head);
+            
+            const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff });
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(-0.15, 0.75, 0.35);
+            leftEye.scale.set(1, 0.6, 0.3);
+            spiderGroup.add(leftEye);
+            
+            const rightEye = leftEye.clone();
+            rightEye.position.set(0.15, 0.75, 0.35);
+            spiderGroup.add(rightEye);
+            
+            const symbolGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            const symbolMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            const symbol = new THREE.Mesh(symbolGeometry, symbolMaterial);
+            symbol.position.set(0, -0.2, 0.45);
+            spiderGroup.add(symbol);
+            
+            scene.add(spiderGroup);
+        }
+
+        function createWebs() {
+            const webMaterial = new THREE.LineBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.6 });
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(Math.cos(angle) * 3, Math.sin(angle) * 3, 0)];
+                const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), webMaterial);
+                scene.add(line);
+                webLines.push(line);
+            }
+            for (let r = 0.5; r <= 2.5; r += 0.5) {
+                const points = [];
+                for (let i = 0; i <= 64; i++) {
+                    const angle = (i / 64) * Math.PI * 2;
+                    points.push(new THREE.Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0));
+                }
+                const circle = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points), webMaterial);
+                scene.add(circle);
+                webLines.push(circle);
+            }
+        }
+
+        function startSpiderAnimation() { isAnimating = true; }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (isAnimating && spiderGroup) {
+                spiderGroup.rotation.y += 0.01;
+                spiderGroup.position.y = Math.sin(Date.now() * 0.002) * 0.2;
+            }
+            webLines.forEach(line => { line.rotation.z += 0.001; });
+            renderer.render(scene, camera);
+        }
+
+        console.log('🕷️🎂 ¡Feliz Cumpleaños Estrellita! 22 de Octubre 🌻✨');
+    </script>
+</body>
+</html>
